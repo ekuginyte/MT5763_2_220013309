@@ -16,10 +16,6 @@ prob <- NA
 set.seed(777)
 # Simple Monte Carlo function to calculate probability Pr(X > Y)
 my_mc <- function(n) {
-  if (n <= 0 || n %% 1 != 0 || is.na(n) || 
-      is.numeric(n) == FALSE || length(n) > 1) {
-    stop("invalid arguments") 
-  }
   # Generate samples with given boundaries
   X <- rnorm(n, mean = 4, sd = sqrt(10))
   Y <- runif(n, min = 2, max = 8)
@@ -37,7 +33,7 @@ my_mc <- function(n) {
 n_repeat <- 100
 # Pre-allocate memory for storing results
 boot_res <- rep(NA, n_repeat)
-prob_res <- rep(NA)
+prob_res <- rep(NA, n_repeat)
 # Loop across all samples
 my_bts <- function(n_repeat) {
   for (i in n_repeat) {
@@ -60,6 +56,36 @@ hist(my_bts_result)
 
 # ---------------------------------------------------------------------------
 # Problem B
+# Consider the following football tournament format: a team keeps playing until 
+# they accrue 7 wins or 3 losses (whichever comes first - no draws allowed). 
+# Assume a fixed win rate p ∈ [0, 1] across all rounds (they are paired at random).
+w <- 7
+l <- 3
+samp <- c(0, 1)
+games <- NA
+wins <- 0
+loses <- 0
+n_rep <- 1000
+
+tournament <- function(n_rep) {
+  while(!wins == w || !loses == l) {
+  outcome <- sample(x = samp, size = 1, replace = TRUE)
+  if (outcome == 0) {
+    loses <- loses + 1
+  }
+  else (outcome == 1) {
+    wins <- wins + 1
+  }
+  games <- wins + loses
+  }
+  games
+}
+
+# Plot how the total number of matches played (i.e. wins + losses) varies as a function of p.
+hist(tournament(n_rep))
+
+
+
 
 
 
