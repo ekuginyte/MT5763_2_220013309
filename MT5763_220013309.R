@@ -1,9 +1,10 @@
-# MT5763_2201330
+# MT5763_22013309
 # Individual Assignment 2
 
 # Include libraries
 library(tidyverse)
 library(ggplot2)
+library(dplyr)
 
 # Problem A
 # Sample size
