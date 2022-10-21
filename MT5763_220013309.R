@@ -4,7 +4,6 @@
 # Include libraries
 library(tidyverse)
 library(ggplot2)
-library(dplyr)
 
 # Problem A
 # Sample size
