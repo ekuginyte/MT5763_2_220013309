@@ -4,10 +4,11 @@
 # Include libraries
 library(tidyverse)
 library(ggplot2)
+library(ggpubr)
 
 # Problem A
 # Sample size
-n <- 10000
+n <- 100
 # Pre-allocate memory for storing random samples
 X <- rep(NA, n)
 Y <- rep(NA, n)
@@ -35,9 +36,10 @@ n_repeat <- 100
 boot_res <- rep(NA, n_repeat)
 prob_res <- rep(NA, n_repeat)
 # Loop across all samples
+# NOT WORKINGGGGGGGGGGGGGGGGGGGGGGGGGGGG, loads of NAs
 my_bts <- function(n_repeat) {
-  for (i in n_repeat) {
-  prob_res <- my_mc(n)
+  for (i in seq(n_repeat)) 
+  prob_res <- c(prob_res, my_mc(n))
   }
   # Resample with replacement
   boot_res <- sample(x = prob_res, size = n_repeat, replace = TRUE)
@@ -51,7 +53,16 @@ hist(my_bts_result)
 
 # Bootstrap variance changes when sample size for Monte Carlo simulation is
 # 10, 100, 1000, 10000
+my_bts_100 <- my_bts(100)
+hist_100 <- ggplot(data = my_bts_10, aes(y = my_bts_100))
+my_bts_1000 <- my_bts(1000)
+hist_1000 <- ggplot(data = my_bts_10, aes(y = my_bts_1000))
+my_bts_10000 <- my_bts(10000)
+hist_10000 <- ggplot(data = my_bts_10, aes(y = my_bts_10000))
 
+ggarrange(my_bts_100, my_bts_1000, my_bts_10000 + rremove("x.text"), 
+          labels = c("100 Samples", "1000 Samples", "10000 Samples"),
+          ncol = 2, nrow = 2)
 
 
 # ---------------------------------------------------------------------------
@@ -64,25 +75,30 @@ l <- 3
 samp <- c(0, 1)
 games <- NA
 wins <- 0
-loses <- 0
-n_rep <- 1000
+losses <- 0
+n_reps <- 100
 
-tournament <- function(n_rep) {
-  while(!wins == w || !loses == l) {
+# NOT WORKINGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+tournament <- function() {
+  while(!wins == w || !losses == l) {
   outcome <- sample(x = samp, size = 1, replace = TRUE)
   if (outcome == 0) {
-    loses <- loses + 1
+    losses <- losses + 1
   }
-  else (outcome == 1) {
+  else {
     wins <- wins + 1
   }
-  games <- wins + loses
+  games <- wins + losses
+  return(games)
   }
-  games
 }
 
-# Plot how the total number of matches played (i.e. wins + losses) varies as a function of p.
+
+# Plot how the total number of matches played (i.e. wins + losses) varies as a 
+# function of p.
 hist(tournament(n_rep))
+
+
 
 
 
