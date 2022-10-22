@@ -8,7 +8,7 @@ library(ggpubr)
 
 # Problem A
 # Sample size
-n <- 100
+n <- 10000
 # Pre-allocate memory for storing random samples
 X <- rep(NA, n)
 Y <- rep(NA, n)
@@ -23,7 +23,7 @@ my_mc <- function(n) {
   # Check how many x variables are greater than y variables
   # http://ditraglia.com/Econ103Public/Rtutorials/Rtutorial4.html
   prob <- sum(X > Y) / length(X + Y)
-  return(prob)
+  prob
 }
 
 # Bootstrapping to derive the sampling distribution of Pr(X > Y)
@@ -31,20 +31,19 @@ my_mc <- function(n) {
 # For reproducibility
 # set.seed(555)
 # Sample size
-n_repeat <- 100
+n_repeat <- 1000
 # Pre-allocate memory for storing results
 boot_res <- rep(NA, n_repeat)
 prob_res <- rep(NA, n_repeat)
 # Loop across all samples
-# NOT WORKINGGGGGGGGGGGGGGGGGGGGGGGGGGGG, loads of NAs
 my_bts <- function(n_repeat) {
-  for (i in seq(n_repeat)) 
-  prob_res <- c(prob_res, my_mc(n))
+  for (i in seq(n_repeat)) {
+  prob_res[i] <- my_mc(n)
   }
   # Resample with replacement
   boot_res <- sample(x = prob_res, size = n_repeat, replace = TRUE)
   # Store results
-  return(boot_res)
+  boot_res
 }
 # Save data to plot
 my_bts_result <- my_bts(n_repeat)
@@ -52,18 +51,24 @@ my_bts_result <- my_bts(n_repeat)
 hist(my_bts_result)
 
 # Bootstrap variance changes when sample size for Monte Carlo simulation is
-# 10, 100, 1000, 10000
-my_bts_100 <- my_bts(100)
-hist_100 <- ggplot(data = my_bts_10, aes(y = my_bts_100))
-my_bts_1000 <- my_bts(1000)
-hist_1000 <- ggplot(data = my_bts_10, aes(y = my_bts_1000))
-my_bts_10000 <- my_bts(10000)
-hist_10000 <- ggplot(data = my_bts_10, aes(y = my_bts_10000))
+# 500, 5000, 20000. Minimum recommended - 5k, max recommended - 20k.
+n <- 500
+my_bts_500 <- my_bts(n_repeat)
+ggplot() + 
+  aes(my_bts_500) + 
+  geom_histogram(colour = "black", fill = "white")
 
-ggarrange(my_bts_100, my_bts_1000, my_bts_10000 + rremove("x.text"), 
-          labels = c("100 Samples", "1000 Samples", "10000 Samples"),
-          ncol = 2, nrow = 2)
+n <- 5000
+my_bts_5000 <- my_bts(n_repeat)
+ggplot() + 
+  aes(my_bts_5000) + 
+  geom_histogram(colour = "black", fill = "white")
 
+n <- 20000
+my_bts_20000 <- my_bts(n_repeat)
+ggplot() + 
+  aes(my_bts_20000) + 
+  geom_histogram(colour = "black", fill = "white")
 
 # ---------------------------------------------------------------------------
 # Problem B
