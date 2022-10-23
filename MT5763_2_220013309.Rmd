@@ -1,23 +1,88 @@
 ---
 title: "Individual Assignment 2"
-author: "MT5763_2_220013309"
-date: "2022-10-22"
-output: pdf_document
+author: "Erna Kuginyte, Student Number 220013309"
+date: "22/10/2022"
+output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+### Find the R Markdown file at [the GitHub Repository](https://github.com/ekuginyte/MT5763_2_220013309.git)
+
+## Problem A
+### Monte Carlo simulation
+#### Initialise
+
+```{r Libraries}
+# Include libraries
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
 ```
 
-## R Markdown
+Compute the probability that X > Y , i.e. Pr(X > Y ).
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r Monte Carlo Simulation}
+# Problem A
+# Sample size
+n <- 10000
+# Pre-allocate memory for storing random samples
+X <- rep(NA, n)
+Y <- rep(NA, n)
+prob <- NA
+# For reproducibility
+set.seed(777)
+# Simple Monte Carlo function to calculate probability Pr(X > Y)
+# Input:
+#  X - samples from normal distribution,
+#  Y - samples from uniform distribution.
+# Output:
+#  prob - probability Pr(X > Y).
+my_mc <- function(n) {
+  # Generate samples with given boundaries
+  X <- rnorm(n, mean = 4, sd = sqrt(10))
+  Y <- runif(n, min = 2, max = 8)
+  # Check how many x variables are greater than y variables
+  # http://ditraglia.com/Econ103Public/Rtutorials/Rtutorial4.html
+  prob <- sum(X > Y) / length(X + Y)
+  # I wouldn't use return command normally in this place, since the Tidyverse
+  # Style Guide advice against it, unless I wanted the return earlier in the 
+  # function. However, I have heard this sometimes gets penalised at the 
+  # university, hence, the return command at the end of the function.
+  return(prob)
+}
 ```
+
+COMMENTS
+
+Use bootstrapping to derive the sampling distribution for the estimate of Pr(X > Y ).
+
+```{r My Bootstrap function}
+# Bootstrapping to derive the sampling distribution of Pr(X > Y)
+# Sample size
+n_repeat <- 1000
+# Pre-allocate memory for storing results
+boot_res <- rep(NA, n_repeat)
+prob_res <- rep(NA, n_repeat)
+# For reproducibility
+set.seed(555)
+# Loop across all samples
+# Output:
+#  boot_res - store vector of the Pr(X > Y) distribution.
+my_bts <- function(n_repeat) {
+  for (i in seq(n_repeat)) {
+  prob_res[i] <- my_mc(n)
+  }
+  # Resample with replacement
+  boot_res <- sample(x = prob_res, size = n_repeat, replace = TRUE)
+  # Store results
+  return(boot_res)
+}
+```
+
+
+
+
+
+
 
 ## Including Plots
 
