@@ -59,6 +59,8 @@ my_bts <- function(n_repeat) {
 my_bts_result <- data_frame(my_bts(n_repeat))
 # Plot the bootstrap results
 hist(my_bts_result)
+# INCLUDE VARIANCE LIMITS?
+
 # FIXXXXXXXXXXXXXXXXXXXXXXXXXX -----------------------------------------
 ggplot(my_bts_result) + 
   aes(x = my_bts_result[, 1], y = my_bts_result[, 2]) +
@@ -138,8 +140,6 @@ tournament_plot <- data_frame(val = tournament(w, l, n_reps)) %>%
   ggtitle("Games Played to Finish The Match") +
   theme_minimal() +
   geom_bar(colour = "firebrick", fill = "white")
-
-
 
 
 
