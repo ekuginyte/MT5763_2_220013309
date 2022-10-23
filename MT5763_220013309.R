@@ -75,33 +75,35 @@ ggplot() +
 # Consider the following football tournament format: a team keeps playing until 
 # they accrue 7 wins or 3 losses (whichever comes first - no draws allowed). 
 # Assume a fixed win rate p ∈ [0, 1] across all rounds (they are paired at random).
-w <- 7
-l <- 3
-samp <- c(0, 1)
+# Pre-allocate memory
 games <- NA
 wins <- 0
 losses <- 0
-n_reps <- 100
+n_reps <- 10000
 
-# NOT WORKINGGGGGGGGGGGGGGGGGGGGGGGGGGGG
-tournament <- function() {
-  while(!wins == w || !losses == l) {
-  outcome <- sample(x = samp, size = 1, replace = TRUE)
-  if (outcome == 0) {
-    losses <- losses + 1
+# Input:
+#  w - wins,
+#  l - losses.
+#  samp - possible outcomes, 0 - losing, 1 - winning.
+tournament <- function(w, l, n_reps) {
+  w <- 7
+  l <- 3
+  game_n <- rep(NA, n_reps)
+  for (i in 1:n_reps) {
+  outcome <- sample(x = c("w", "l"), size = 3, replace = TRUE)
+  while (all(c((sum(outcome == "w") < w), (sum(outcome == "l") < l)))) {
+    outcome <- c(outcome, sample(x = c("w", "l"), size = 1, replace = TRUE))
   }
-  else {
-    wins <- wins + 1
+  game_n[i] <- length(outcome)
   }
-  games <- wins + losses
-  return(games)
-  }
+  return(game_n)
 }
-
 
 # Plot how the total number of matches played (i.e. wins + losses) varies as a 
 # function of p.
-hist(tournament(n_rep))
+tournament_plot <- data_frame(val = tournament(w, l, n_reps)) %>%
+  ggplot(., aes(val)) + 
+  geom_bar()
 
 
 
