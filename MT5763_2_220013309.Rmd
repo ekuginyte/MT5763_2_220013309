@@ -10,7 +10,7 @@ output: html_document
 #### Problem A
 ##### Initialise
 
-```{r Libraries, eval = F}
+```{r Libraries}
 # Include libraries
 library(tidyverse)
 library(ggplot2)
