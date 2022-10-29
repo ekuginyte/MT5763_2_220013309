@@ -10,10 +10,9 @@ output: html_document
 #### Problem A
 ##### Initialise
 
-```{r Libraries}
+```{r Libraries, include=FALSE}
 # Include libraries
 library(tidyverse)
-library(ggplot2)
 library(ggpubr)
 ```
 
@@ -22,7 +21,7 @@ Monte Carlo Simulation to compute the probability that X > Y , i.e. Pr(X > Y ).
 ```{r Monte Carlo Simulation}
 # Problem A
 # Sample size
-n <- 10000
+n <- 1000
 # Pre-allocate memory for storing random samples
 X <- rep(NA, n)
 Y <- rep(NA, n)
@@ -39,8 +38,7 @@ my_mc <- function(n) {
   # Generate samples with given boundaries
   X <- rnorm(n, mean = 4, sd = sqrt(10))
   Y <- runif(n, min = 2, max = 8)
-  # Check how many x variables are greater than y variables
-  # http://ditraglia.com/Econ103Public/Rtutorials/Rtutorial4.html
+  # Compute probability Pr(X > Y) ^[http://ditraglia.com/Econ103Public/Rtutorials/Rtutorial4.html]
   prob <- sum(X > Y) / length(X + Y)
   # I wouldn't use return command normally in this place, since the Tidyverse
   # Style Guide advice against it, unless I wanted the return earlier in the 
@@ -48,9 +46,8 @@ my_mc <- function(n) {
   # university, hence, the return command at the end of the function.
   return(prob)
 }
-```
 
-```{r}
+# Results
 my_mc(n)
 ```
 
@@ -60,7 +57,7 @@ Bootstrapping method to derive the sampling distribution for the estimate of Pr(
 ```{r My Bootstrap function}
 # Bootstrapping to derive the sampling distribution of Pr(X > Y)
 # Sample size
-n_repeat <- 1000
+n_repeat <- 10000
 # Pre-allocate memory for storing results
 boot_res <- rep(NA, n_repeat)
 prob_res <- rep(NA, n_repeat)
@@ -80,44 +77,63 @@ my_bts <- function(n_repeat) {
 }
 ```
 
-```{r Plot Monte Carlo results, echo = FALSE}
+```{r Plot Bootstrap results, echo = FALSE}
+res_bts <- my_bts(n_repeat)
 # Plot the bootstrap results
-hist(my_bts(n_repeat))
+ggplot() +
+  geom_histogram(aes(x = res_bts), colour = "deepskyblue", fill = "azure1", bins = 50) +
+  xlab("Count") + ylab("Density") +
+  ggtitle("My Bootstrap Result") + 
+  theme_minimal()
 ```
+
 
 Sample variance changes with the number of Monte Carlo Simulations.
 
 ```{r Sample Variance Changes}
+n <- 100
+prob <- rep(NULL, n_reps)
+variance_change <- function(n) {
+  for (i in 1:n) {
+  prob[i] <- my_mc(i)
+  }
+  boot_res <- sample(x = prob, size = n, replace = TRUE)
+  for (i in 1:n) {
+  var_boot[i] <- var(boot_res[1:i])
+  }
+  var_boot
+}
+hist(variance_change(n))
+
+
+my_bts <- function(n_repeat) {
+  for (i in seq(n_repeat)) {
+  prob_res[i] <- my_mc(n)
+  }
+  # Resample with replacement
+  boot_res <- sample(x = prob_res, size = n_repeat, replace = TRUE)
+  # Store results
+  return(boot_res)
+}
+
+
+
+
+
+
+
 # Bootstrap variance changes when sample size for Monte Carlo simulation is
 # 500, 5000, 20000. Minimum recommended - 5k, max recommended - 20k.
 n <- 500
 ggplot() + 
-  aes(my_bts(n_repeat)) + 
+  aes(my_bts(n_rep 69o6[eat)) + 
   geom_histogram(colour = "firebrick", fill = "white", bins = 40) +
   xlab("Bootstrap Values") +
   ylab("Count") +
   ggtitle("Bootstrap Values With 500 Monte Carlo Simulations") +
   theme_minimal()
-
-n <- 5000
-ggplot() + 
-  aes(my_bts(n_repeat)) + 
-  geom_histogram(colour = "firebrick", fill = "white", bins = 40) +
-  xlab("Bootstrap Values") +
-  ylab("Count") +
-  ggtitle("Bootstrap Values With 5000 Monte Carlo Simulations") +
-  theme_minimal()
-
-n <- 20000
-ggplot() + 
-  aes(my_bts(n_repeat)) + 
-  geom_histogram(colour = "firebrick", fill = "white", bins = 40) +
-  xlab("Bootstrap Values") +
-  ylab("Count") +
-  ggtitle("Bootstrap Values With 20000 Monte Carlo Simulations") +
-  theme_minimal()
 ```
-
+ 
 
 #### Problem B 
 Football tournament. A team keeps playing until they accrue 7 wins or 3 losses (whichever comes first - no draws allowed). Assume a fixed win rate p ∈ [0, 1] across all rounds (they are paired at random).
