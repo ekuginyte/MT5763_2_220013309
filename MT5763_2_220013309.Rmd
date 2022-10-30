@@ -79,9 +79,12 @@ my_bts <- function(n_repeat) {
 
 ```{r Plot Bootstrap results, echo = FALSE}
 res_bts <- my_bts(n_repeat)
+res_bts_mean <- mean(res_bts)
 # Plot the bootstrap results
 ggplot() +
-  geom_histogram(aes(x = res_bts), colour = "deepskyblue", fill = "azure1", bins = 50) +
+  geom_histogram(aes(x = res_bts), colour = "darkgrey", fill = "aliceblue", 
+                 bins = 40) +
+  geom_vline(xintercept = res_bts_mean, colour = "deepskyblue4", size = 1) +
   xlab("Count") + ylab("Density") +
   ggtitle("My Bootstrap Result") + 
   theme_minimal()
@@ -91,49 +94,43 @@ ggplot() +
 Sample variance changes with the number of Monte Carlo Simulations.
 
 ```{r Sample Variance Changes}
-n <- 100
-prob <- rep(NULL, n_reps)
+# Number of simulations to run
+n <- 1000
+# Pre-allocate memory to store vector of variances
+sample_variances <- rep(NULL, n)
+simulation <- rep(NULL, n)
+# For reproducibility
+set.seed(222)
+
+# Create function to produce variances as number of Monte Carlo simulations
+# increase
+# Input: 
+#  n - number of simulations ran.
+# Output:
+#  sample_variances - vector of Monte Carlo sample variances.
 variance_change <- function(n) {
+  # Store multiple values of Monte Carlo simulation probabilities Pr(X > Y)
+  for(i in 1:n) {
+    simulation[i] <- my_mc(i)
+  }
+  simulation
   for (i in 1:n) {
-  prob[i] <- my_mc(i)
-  }
-  boot_res <- sample(x = prob, size = n, replace = TRUE)
-  for (i in 1:n) {
-  var_boot[i] <- var(boot_res[1:i])
-  }
-  var_boot
-}
-hist(variance_change(n))
-
-
-my_bts <- function(n_repeat) {
-  for (i in seq(n_repeat)) {
-  prob_res[i] <- my_mc(n)
-  }
-  # Resample with replacement
-  boot_res <- sample(x = prob_res, size = n_repeat, replace = TRUE)
-  # Store results
-  return(boot_res)
+    sample_variances[i] <- var(simulation[1:(i + 1)])
+    }
+  return(sample_variances)
 }
 
-
-
-
-
-
-
-# Bootstrap variance changes when sample size for Monte Carlo simulation is
-# 500, 5000, 20000. Minimum recommended - 5k, max recommended - 20k.
-n <- 500
-ggplot() + 
-  aes(my_bts(n_rep 69o6[eat)) + 
-  geom_histogram(colour = "firebrick", fill = "white", bins = 40) +
-  xlab("Bootstrap Values") +
-  ylab("Count") +
-  ggtitle("Bootstrap Values With 500 Monte Carlo Simulations") +
+# Save variance distribution to p
+p <- variance_change(n)
+# Sample variance changes plot
+ggplot() +
+  geom_density(aes(y = p), colour = "darkolivegreen") +
+  xlab("Monte Carlo Simulations") +
+  ylab("Sample Variance") +
+  ggtitle("Sample Variance of The Sampling Distribution") +
   theme_minimal()
 ```
- 
+
 
 #### Problem B 
 Football tournament. A team keeps playing until they accrue 7 wins or 3 losses (whichever comes first - no draws allowed). Assume a fixed win rate p ∈ [0, 1] across all rounds (they are paired at random).
@@ -153,7 +150,64 @@ set.seed(333)
 #  l - losses to finish the match.
 # Output:
 #  game_n - number of games played for the match to be finished.
-tournament <- function(w, l, n_reps) {
+tournament <- function(n_reps) {
+  w <- 7
+  l <- 3
+  # Pre-allocated memory
+  game_n <- rep(NA, n_reps)
+  # Looping through samples of winning (w) or loosing (l)
+  for (i in 1:n_reps) {
+  # outcome <- sample(x = c("w", "l"), size = 3, replace = TRUE)
+  # Looping while the outcome of the game reaches w or l value
+  #while (all(c((sum(outcome == "w") < w), (sum(outcome == "l") < l)))) {
+  #  outcome <- c(outcome, sample(x = c("w", "l"), size = 1, replace = TRUE))
+  #}
+  outcome <- sample(x = c("0", "1"), size = 9, replace = TRUE)
+  
+  if (outcome == )
+  
+  
+  # Store number of games played when match is over
+  game_n[i] <- length(outcome)
+  
+  }
+  
+  return(game_n)
+}
+
+
+
+tournament_p <- function(prob) {
+  # Assign counter
+  w <- 0
+  l <- 0
+  
+  while(w<7 && l<3) {
+    result<-rbinom(1,1,prob)
+    if(result==1){
+      w <- w +1
+    } else {
+      l <- l +1
+    }
+    
+  }
+
+return(w+l)
+  }
+  
+p <- seq(0,1,0.05)
+tournament_p(p[2])
+result_list <- NULL
+for (i in 1:length(p)) {
+  
+  result_list <- c(result_list, tournament_p(p[i]))
+  
+}
+result_list[2]
+plot(p, result_list)
+tournament_p(0.1)
+  
+  tournament <- function(n_reps) {
   w <- 7
   l <- 3
   # Pre-allocated memory
@@ -170,6 +224,7 @@ tournament <- function(w, l, n_reps) {
   }
   return(game_n)
 }
+
 ```
 
 Plot how the total number of matches played (i.e. wins + losses) varies as a function of p.
