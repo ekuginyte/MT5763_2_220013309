@@ -1,7 +1,7 @@
 ---
 title: "Individual Assignment 2"
 author: "Erna Kuginyte, Student Number 220013309"
-date: "22/10/2022"
+date: "30/10/2022"
 output: html_document
 ---
 
@@ -133,16 +133,13 @@ ggplot() +
 
 
 #### Problem B 
+
+
 Football tournament. A team keeps playing until they accrue 7 wins or 3 losses (whichever comes first - no draws allowed). Assume a fixed win rate p ∈ [0, 1] across all rounds (they are paired at random).
+
 ```{r}
 # Count number of games the team needs to play to win or loose the match.
 # The team needs to accrue 7 wins or 3 losses (no draws). 
-# Pre-allocate memory
-games <- NA
-wins <- 0
-losses <- 0
-# To check the distribution
-n_reps <- 10000
 # For reproducibility
 set.seed(333)
 # Input:
@@ -150,96 +147,65 @@ set.seed(333)
 #  l - losses to finish the match.
 # Output:
 #  game_n - number of games played for the match to be finished.
-tournament <- function(n_reps) {
-  w <- 7
-  l <- 3
-  # Pre-allocated memory
-  game_n <- rep(NA, n_reps)
-  # Looping through samples of winning (w) or loosing (l)
-  for (i in 1:n_reps) {
-  # outcome <- sample(x = c("w", "l"), size = 3, replace = TRUE)
-  # Looping while the outcome of the game reaches w or l value
-  #while (all(c((sum(outcome == "w") < w), (sum(outcome == "l") < l)))) {
-  #  outcome <- c(outcome, sample(x = c("w", "l"), size = 1, replace = TRUE))
-  #}
-  outcome <- sample(x = c("0", "1"), size = 9, replace = TRUE)
-  
-  if (outcome == )
-  
-  
-  # Store number of games played when match is over
-  game_n[i] <- length(outcome)
-  
-  }
-  
-  return(game_n)
-}
-
-
-
-tournament_p <- function(prob) {
+tournament <- function(prob) {
+  # Pre-allocate memory
+  games <- NA
   # Assign counter
   w <- 0
   l <- 0
-  
-  while(w<7 && l<3) {
-    result<-rbinom(1,1,prob)
-    if(result==1){
-      w <- w +1
-    } else {
-      l <- l +1
+  # Conditions
+  wins <- 7
+  loses <- 3
+  while(w < wins && l < loses) {
+    result <- rbinom(1, 1, prob)
+    if(result == 1) {
+      w <- w + 1
+    } 
+    else {
+      l <- l + 1
     }
-    
   }
-
-return(w+l)
-  }
-  
-p <- seq(0,1,0.05)
-tournament_p(p[2])
-result_list <- NULL
-for (i in 1:length(p)) {
-  
-  result_list <- c(result_list, tournament_p(p[i]))
-  
-}
-result_list[2]
-plot(p, result_list)
-tournament_p(0.1)
-  
-  tournament <- function(n_reps) {
-  w <- 7
-  l <- 3
-  # Pre-allocated memory
-  game_n <- rep(NA, n_reps)
-  # Looping through samples of winning (w) or loosing (l)
-  for (i in 1:n_reps) {
-  outcome <- sample(x = c("w", "l"), size = 3, replace = TRUE)
-  # Looping while the outcome of the game reaches w or l value
-  while (all(c((sum(outcome == "w") < w), (sum(outcome == "l") < l)))) {
-    outcome <- c(outcome, sample(x = c("w", "l"), size = 1, replace = TRUE))
-  }
-  # Store number of games played when match is over
-  game_n[i] <- length(outcome)
-  }
-  return(game_n)
+  games <- w + l 
+  return(games)
 }
 
+# Set p values
+p <- seq(0, 1, 0.00001)
+# Number of times to repeat the function
+n <- 1000
+# Create function p
+p_function <- function(n) {
+  # Store results
+  result_list <- NULL
+  # Run for loop to create p function
+  for (i in 1:length(p)) {
+    result_list[i] <- tournament(p[i])
+  }
+  return(result_list)
+}
 ```
+
 
 Plot how the total number of matches played (i.e. wins + losses) varies as a function of p.
 
 ```{r}
-# Plot how the total number of matches played (i.e. wins + losses) varies as a 
-# function of p.
-tournament_plot <- data_frame(val = tournament(w, l, n_reps)) %>%
-  ggplot(., aes(val)) + 
-  xlab("Number of Games Played") +
-  ylab("Count") +
-  ggtitle("Games Played to Finish The Match") +
-  theme_minimal() +
-  geom_bar(colour = "firebrick", fill = "white")
+# Store results of number of games played to plot
+games_played <- p_function(n)
+
+# Function p plot
+ggplot() +
+  geom_point(aes(x = p, y = games_played), colour = "azure2", alpha = 0.05) +
+  geom_smooth(aes(x = p, y = games_played), colour = "darkslateblue") +
+  scale_x_continuous(breaks = seq(0, 1, 0.1)) +
+  xlab("p") +
+  ylab("Games Played") +
+  ggtitle("Games Played from Probability of Winning") +
+  theme_minimal()
 ```
 
 
 Comment on the observed win rate relative to the assumed win rate p (i.e. if a team obtains 2 wins - 3 losses, the maximum likelihood point estimate for their win rate is 40%). Specifically, focus on the effect driven by the format of this tournament.
+
+
+
+
