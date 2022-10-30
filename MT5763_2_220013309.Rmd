@@ -1,24 +1,49 @@
 ---
-title: "Individual Assignment 2"
-author: "Erna Kuginyte, Student Number 220013309"
+title: "MT5763 Individual Assignment 2"
+author: "Erna Kuginyte, 220013309"
 date: "30/10/2022"
-output: html_document
+output: pdf_document
 ---
 
-#### Find the R Markdown file at [the GitHub Repository](https://github.com/ekuginyte/MT5763_2_220013309.git)
+Find the R Markdown file at [**the GitHub Repository**](https://github.com/ekuginyte/MT5763_2_220013309.git) 
 
-#### Problem A
-##### Initialise
+Or copy and paste the link: https://github.com/ekuginyte/MT5763_2_220013309.git
 
-```{r Libraries, include=FALSE}
+## Abstract
+
+This report summarises the functions created to replicate Monte Carlo simulation and Bootstrapping methods. 
+
+Problem A includes simple Monte Carlo simulation to calculate Pr(X > Y) with given X Normal distribution and Y Uniform distribution. The plotted sample variance distribution shows that the variance gets close to zero as number of MC simulation increases.
+
+Problem B applies MC simulation and bootstrapping to replicate the tournament format and the effect of total number of games played from probability of winning. In the case of the later described in more detail tournament format, ... assumptions?
+
+```{r logo, fig.align='center', message=FALSE, echo = FALSE, warning=FALSE, echox=FALSE, out.width='0.50\\linewidth'}
+knitr::include_graphics("STA.png")
+```
+
+\begin{center}
+University of St Andrews
+\end{center}
+
+\pagebreak
+
+# Problem A
+
+Include Libraries
+
+```{r Libraries, echo=TRUE, message=FALSE, warning=FALSE}
 # Include libraries
 library(tidyverse)
 library(ggpubr)
+library(knitr)
+library(doParallel)
+
 ```
 
-Monte Carlo Simulation to compute the probability that X > Y , i.e. Pr(X > Y ).
 
-```{r Monte Carlo Simulation}
+**Monte Carlo Simulation** to compute the probability Pr(X > Y). Refer to result in Table 1.
+
+```{r Monte Carlo Simulation, echo=TRUE, message=FALSE, warning=FALSE}
 # Problem A
 # Sample size
 n <- 1000
@@ -38,7 +63,7 @@ my_mc <- function(n) {
   # Generate samples with given boundaries
   X <- rnorm(n, mean = 4, sd = sqrt(10))
   Y <- runif(n, min = 2, max = 8)
-  # Compute probability Pr(X > Y) ^[http://ditraglia.com/Econ103Public/Rtutorials/Rtutorial4.html]
+  # Compute probability Pr(X > Y)
   prob <- sum(X > Y) / length(X + Y)
   # I wouldn't use return command normally in this place, since the Tidyverse
   # Style Guide advice against it, unless I wanted the return earlier in the 
@@ -46,15 +71,16 @@ my_mc <- function(n) {
   # university, hence, the return command at the end of the function.
   return(prob)
 }
+# Return results in a table
+kable(my_mc(n), caption = "Pr(X > Y)")
 
-# Results
-my_mc(n)
 ```
 
+\pagebreak
 
-Bootstrapping method to derive the sampling distribution for the estimate of Pr(X > Y ).
+**Bootstrapping method** to derive the sampling distribution for the estimate of Pr(X > Y).
 
-```{r My Bootstrap function}
+```{r My Bootstrap function, echo = TRUE, }
 # Bootstrapping to derive the sampling distribution of Pr(X > Y)
 # Sample size
 n_repeat <- 10000
@@ -67,18 +93,23 @@ set.seed(555)
 # Output:
 #  boot_res - store vector of the Pr(X > Y) distribution.
 my_bts <- function(n_repeat) {
-  for (i in seq(n_repeat)) {
-  prob_res[i] <- my_mc(n)
-  }
+  # Compute vector of the Pr(X > Y) distribution, parallelise
+  prob_res <- foreach(i = 1:n_repeat, .combine = "c") %dopar% {
+  my_mc(n)
+    }
   # Resample with replacement
   boot_res <- sample(x = prob_res, size = n_repeat, replace = TRUE)
   # Store results
   return(boot_res)
 }
+
+
 ```
 
-```{r Plot Bootstrap results, echo = FALSE}
+```{r Plot Bootstrap results, echo = TRUE, message = FALSE, warning = FALSE}
+# Save bootstrap results
 res_bts <- my_bts(n_repeat)
+# Save the mean of the bootstrap results
 res_bts_mean <- mean(res_bts)
 # Plot the bootstrap results
 ggplot() +
@@ -93,9 +124,9 @@ ggplot() +
 
 Sample variance changes with the number of Monte Carlo Simulations.
 
-```{r Sample Variance Changes}
+```{r Sample Variance Changes, echo = TRUE, message = FALSE, warning = FALSE}
 # Number of simulations to run
-n <- 1000
+n_sim <- 10000
 # Pre-allocate memory to store vector of variances
 sample_variances <- rep(NULL, n)
 simulation <- rep(NULL, n)
@@ -103,25 +134,25 @@ simulation <- rep(NULL, n)
 set.seed(222)
 
 # Create function to produce variances as number of Monte Carlo simulations
-# increase
+# increase.
 # Input: 
 #  n - number of simulations ran.
 # Output:
 #  sample_variances - vector of Monte Carlo sample variances.
-variance_change <- function(n) {
+variance_change <- function(n_sim) {
   # Store multiple values of Monte Carlo simulation probabilities Pr(X > Y)
-  for(i in 1:n) {
-    simulation[i] <- my_mc(i)
+  simulation <- foreach(i = 1:n_sim, .combine = "c") %dopar% {
+  my_mc(i)
   }
-  simulation
-  for (i in 1:n) {
-    sample_variances[i] <- var(simulation[1:(i + 1)])
-    }
+  # Store each variance of the i:(i + 1) simulations
+  sample_variances <- foreach(i = 1:n, .combine = "c") %dopar% {
+    var(simulation[1:(i + 1)])
+  }
   return(sample_variances)
 }
 
 # Save variance distribution to p
-p <- variance_change(n)
+p <- variance_change(n_sim)
 # Sample variance changes plot
 ggplot() +
   geom_density(aes(y = p), colour = "darkolivegreen") +
@@ -132,12 +163,12 @@ ggplot() +
 ```
 
 
-#### Problem B 
+# Problem B 
+
+Football tournament. A team keeps playing until they accrue 7 wins or 3 losses (whichever comes first - no draws allowed). Assumed fixed win rate p[0, 1] across all rounds (they are paired at random).
 
 
-Football tournament. A team keeps playing until they accrue 7 wins or 3 losses (whichever comes first - no draws allowed). Assume a fixed win rate p ∈ [0, 1] across all rounds (they are paired at random).
-
-```{r}
+```{r, Tournament function, echo = TRUE, message = FALSE, warning = FALSE}
 # Count number of games the team needs to play to win or loose the match.
 # The team needs to accrue 7 wins or 3 losses (no draws). 
 # For reproducibility
@@ -170,27 +201,29 @@ tournament <- function(prob) {
 }
 
 # Set p values
-p <- seq(0, 1, 0.00001)
+p <- seq(0, 1, 0.001)
 # Number of times to repeat the function
-n <- 1000
+n_rep <- 1000
 # Create function p
-p_function <- function(n) {
+p_function <- function(n_rep) {
   # Store results
   result_list <- NULL
-  # Run for loop to create p function
-  for (i in 1:length(p)) {
-    result_list[i] <- tournament(p[i])
+  # Create p function with p values on x axis, total games played on y axis
+  result_list <- foreach(i = 1:length(p), .combine = "c") %dopar% {
+    tournament(p[i])
   }
   return(result_list)
 }
+
 ```
+
 
 
 Plot how the total number of matches played (i.e. wins + losses) varies as a function of p.
 
-```{r}
+```{r, Plot function of p, echo = TRUE, message = FALSE, warning = FALSE}
 # Store results of number of games played to plot
-games_played <- p_function(n)
+games_played <- p_function(n_rep)
 
 # Function p plot
 ggplot() +
@@ -207,5 +240,15 @@ ggplot() +
 Comment on the observed win rate relative to the assumed win rate p (i.e. if a team obtains 2 wins - 3 losses, the maximum likelihood point estimate for their win rate is 40%). Specifically, focus on the effect driven by the format of this tournament.
 
 
+# Resample with replacement
+  bootData <- obsData[sample(x = N, size = N, replace = T), ]
+  
+  # Fit model under this alternative reality
+  mdl <- lm(y ~ x, data = bootData)
+
+
+
+# Bibliography 
+1. 
 
 
