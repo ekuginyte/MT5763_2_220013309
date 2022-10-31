@@ -41,12 +41,12 @@ library(doParallel)
 ```
 
 
-**Monte Carlo Simulation** to compute the probability Pr(X > Y). Refer to result in Table 1.
+**Monte Carlo Simulation** to compute the probability Pr(X > Y), with X variable being sampled form normal distribution with mean = 4, standard deviation of square root of 10, and Y variable being sampled from uniform distribution with minimum value of 2, maximum of 8.  ^[(Sigal and Chalmers, 2016)] The function my_mc() takes in value n, the sample size for each variables X and Y. Refer to Pr(X > Y) result in Table 1. The result is reasonable.
 
 ```{r Monte Carlo Simulation, echo=TRUE, message=FALSE, warning=FALSE}
 # Problem A
 # Sample size
-n <- 1000
+n <- 10000
 # Pre-allocate memory for storing random samples
 X <- rep(NA, n)
 Y <- rep(NA, n)
@@ -78,7 +78,7 @@ kable(my_mc(n), caption = "Pr(X > Y)")
 
 \pagebreak
 
-**Bootstrapping method** to derive the sampling distribution for the estimate of Pr(X > Y).
+**Bootstrapping method** to derive the sampling distribution for the estimate of Pr(X > Y). The function my_bts() takes in n_repeat value to return n_repeat number of Pr(X > Y) probabilty values from the my_mc() function. See the plot below of the Bootsrapping distribution. The plot looks reasonable, it does not indicate abnormal distribution.
 
 ```{r My Bootstrap function, echo = TRUE, }
 # Bootstrapping to derive the sampling distribution of Pr(X > Y)
@@ -103,7 +103,6 @@ my_bts <- function(n_repeat) {
   return(boot_res)
 }
 
-
 ```
 
 ```{r Plot Bootstrap results, echo = TRUE, message = FALSE, warning = FALSE}
@@ -122,7 +121,7 @@ ggplot() +
 ```
 
 
-Sample variance changes with the number of Monte Carlo Simulations.
+**Sample variance changes** with the number of Monte Carlo Simulations. The variance_change() function takes in value n_sim to repeat the simulation n_sim times. The function extracts probabilities and then computes variance change as the number of simulation increases. See the plot "Sample Variance of The Sampling Distribution" below, it shows that as the number of simulations of Monte Carlo method increases, variance decreases.
 
 ```{r Sample Variance Changes, echo = TRUE, message = FALSE, warning = FALSE}
 # Number of simulations to run
@@ -165,7 +164,7 @@ ggplot() +
 
 # Problem B 
 
-Football tournament. A team keeps playing until they accrue 7 wins or 3 losses (whichever comes first - no draws allowed). Assumed fixed win rate p[0, 1] across all rounds (they are paired at random).
+Football tournament. A team keeps playing until they accrue 7 wins or 3 losses (whichever comes first - no draws allowed). Assumed fixed win rate p[0, 1] across all rounds (they are paired at random). Function tournament() takes in probabilities p [0, 1] and computes the number of games played to end a match. The p_function() passes through the probabilites to the tournament function and outputs number of games played from probabilities of winning.
 
 
 ```{r, Tournament function, echo = TRUE, message = FALSE, warning = FALSE}
@@ -203,7 +202,7 @@ tournament <- function(prob) {
 # Set p values
 p <- seq(0, 1, 0.001)
 # Number of times to repeat the function
-n_rep <- 1000
+n_rep <- 10000
 # Create function p
 p_function <- function(n_rep) {
   # Store results
@@ -219,7 +218,7 @@ p_function <- function(n_rep) {
 
 
 
-Plot how the total number of matches played (i.e. wins + losses) varies as a function of p.
+Plot how the total number of matches played (i.e. wins + losses) varies as a function of p. As expected, when probability of winning increases, the number of games played increases too. That is particular to this tournament, since to win a game, there have to be 7 wins. It's a lot quicker to lose, since number of loses to end a match is 3. The curve slowly rises at the start because there are more simply more possible outcomes to lose than there are to win.
 
 ```{r, Plot function of p, echo = TRUE, message = FALSE, warning = FALSE}
 # Store results of number of games played to plot
@@ -236,19 +235,83 @@ ggplot() +
   theme_minimal()
 ```
 
+Comment on the observed win rate relative to the assumed win rate p. Specifically, focus on the effect driven by the format of this tournament.
 
-Comment on the observed win rate relative to the assumed win rate p (i.e. if a team obtains 2 wins - 3 losses, the maximum likelihood point estimate for their win rate is 40%). Specifically, focus on the effect driven by the format of this tournament.
+Ran a t-test to see if there is difference between the theoretical values and the observed (simulated) values. Large p-value does not indicate difference. See Table 1.
 
+```{r}
+# Compute expected net winning
+#expectedNetWin <- mean(netWin)
 
-# Resample with replacement
-  bootData <- obsData[sample(x = N, size = N, replace = T), ]
-  
-  # Fit model under this alternative reality
-  mdl <- lm(y ~ x, data = bootData)
+# Win rate = total wins/all games
+win_rate <- function(prob) {
+  # Pre-allocate memory
+  games <- NA
+  win_rate_res <- NA
+  # Assign counter
+  w <- 0
+  l <- 0
+  # Conditions
+  wins <- 7
+  loses <- 3
+  while(w < wins && l < loses) {
+    result <- rbinom(1, 1, prob)
+    if(result == 1) {
+      w <- w + 1
+    } 
+    else {
+      l <- l + 1
+    }
+  }
+  # Total number of games played
+  games <- w + l 
+  # Win rate
+  win_rate_res <- w / games
+  return(win_rate_res)
+}
 
+# Set p values
+p <- seq(0, 1, 0.001)
+# Number of times to repeat the function
+n_times <- 10000
+# Create function p
+win_rate_obs <- function(n_times) {
+  # Store results
+  result_list <- NULL
+  # Create p function with p values on x axis, total games played on y axis
+  result_list <- foreach(i = 1:length(p), .combine = "c") %dopar% {
+    win_rate(p[i])
+  }
+  return(result_list)
+}
+
+# Store results of number of games played to plot
+win_rate_obs_res <- win_rate_obs(n_times)
+
+# Assumed win rate
+ab <- sort(c(7 / 7, 7 / 8, 7 / 9, 6 / 9, 5 / 8, 4 / 7, 3 / 6, 2 / 5, 1 / 4, 0 / 3))
+ab_p <- seq(0.1, 1, 0.1)
+
+# Function p plot
+ggplot() +
+  geom_point(aes(x = p, y = win_rate_obs_res), colour = "azure2", alpha = 0.1) +
+  geom_smooth(aes(x = p, y = win_rate_obs_res), colour = "darkslateblue") +
+  geom_point(aes(x = ab_p, y = ab)) +
+  scale_x_continuous(breaks = seq(0, 1, 0.1)) +
+  xlab("p") +
+  ylab("Win Rate") +
+  ggtitle("Win Rate from Probability of Winning p") +
+  theme_minimal()
+
+# Run a two-tailed t-test for assumed vs observed win rate
+#  H0 - no difference 
+#  H1 - there is a difference 
+test_win_rates <- t.test(x = ab, y = win_rate_obs_res)
+
+# Return result in a table
+kable(test_win_rates$p.value, caption = "p-value form T-Test")
+```
 
 
 # Bibliography 
-1. 
-
-
+1. Matthew J. Sigal & R. Philip Chalmers (2016) Play It Again: Teaching Statistics With Monte Carlo Simulation, Journal of Statistics Education, 24:3, 136-156, DOI: 10.1080/10691898.2016.1246953
