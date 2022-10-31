@@ -15,7 +15,8 @@ This report summarises the functions created to replicate Monte Carlo simulation
 
 Problem A includes simple Monte Carlo simulation to calculate Pr(X > Y) with given X Normal distribution and Y Uniform distribution. The plotted sample variance distribution shows that the variance gets close to zero as number of MC simulation increases.
 
-Problem B applies MC simulation and bootstrapping to replicate the tournament format and the effect of total number of games played from probability of winning. In the case of the later described in more detail tournament format, ... assumptions?
+Problem B applies MC simulation and bootstrapping to replicate the tournament format and the effect of total number of games played from probability of winning. The effect driven by this tournament format comes out to be unfair.
+
 
 ```{r logo, fig.align='center', message=FALSE, echo = FALSE, warning=FALSE, echox=FALSE, out.width='0.50\\linewidth'}
 knitr::include_graphics("STA.png")
@@ -226,7 +227,7 @@ games_played <- p_function(n_rep)
 
 # Function p plot
 ggplot() +
-  geom_point(aes(x = p, y = games_played), colour = "azure2", alpha = 0.05) +
+  geom_point(aes(x = p, y = games_played), colour = "azure2", alpha = 0.1) +
   geom_smooth(aes(x = p, y = games_played), colour = "darkslateblue") +
   scale_x_continuous(breaks = seq(0, 1, 0.1)) +
   xlab("p") +
@@ -235,9 +236,10 @@ ggplot() +
   theme_minimal()
 ```
 
-Comment on the observed win rate relative to the assumed win rate p. Specifically, focus on the effect driven by the format of this tournament.
-
+Compute the observed win rate using win_rate() function, using probabilities p[0, 1]. The assumed win rates are directly related to the p probabilities. Plot to compare the results, see the graph below. 
 Ran a t-test to see if there is difference between the theoretical values and the observed (simulated) values. Large p-value does not indicate difference. See Table 1.
+The effect driven by this format is slightly too far from the assumption values, which means it is a relatively unfair as a tournament structure. It dips in win rate quite a bit from p 0.3 to p 0.7. Decreasing the count of games that need to be won might help to even the odds out. 
+
 
 ```{r}
 # Compute expected net winning
@@ -289,14 +291,12 @@ win_rate_obs <- function(n_times) {
 win_rate_obs_res <- win_rate_obs(n_times)
 
 # Assumed win rate
-ab <- sort(c(7 / 7, 7 / 8, 7 / 9, 6 / 9, 5 / 8, 4 / 7, 3 / 6, 2 / 5, 1 / 4, 0 / 3))
-ab_p <- seq(0.1, 1, 0.1)
+ab <- p 
 
 # Function p plot
 ggplot() +
-  geom_point(aes(x = p, y = win_rate_obs_res), colour = "azure2", alpha = 0.1) +
   geom_smooth(aes(x = p, y = win_rate_obs_res), colour = "darkslateblue") +
-  geom_point(aes(x = ab_p, y = ab)) +
+  geom_point(aes(x = p, y = ab), size = 0.1, colour = "firebrick", alpha = 0.7) +
   scale_x_continuous(breaks = seq(0, 1, 0.1)) +
   xlab("p") +
   ylab("Win Rate") +
